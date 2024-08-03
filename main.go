@@ -1,17 +1,33 @@
 package main
 
 import (
-	"fmt"
 	"log"
+
+	"github.com/go-sql-driver/mysql"
 )
 
 func main() {
-	store, err := newDatabaseStore()
-	if err != nil {
-		log.Fatal("[-] ERROR: ", err)
+
+	config := mysql.Config{
+		User:                 Envs.DBUser,
+		Passwd:               Envs.DBPassword,
+		Addr:                 Envs.DBAddress,
+		DBName:               Envs.DBName,
+		Net:                  "tcp",
+		AllowNativePasswords: true,
+		ParseTime:            true,
 	}
 
-	fmt.Printf("%+v\n", store)
-	// server := newAPIServer(":8000")
-	// server.run()
+	// fmt.Println(config)
+
+	sqlStorage := MyNewSQLStorage(config)
+	db, err := sqlStorage.Init()
+
+	if err != nil {
+		log.Fatal("[-] ", err)
+	}
+
+	store := NewStore(db)
+	api := newAPIServer(":8000", store)
+	api.Serve()
 }
